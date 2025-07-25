@@ -44,7 +44,7 @@ function NIT:addLevelLogDing(level, isFirstTime)
 		NIT.data.myChars[char].levelLog[level] = {};
 	end
 	NIT.data.myChars[char].levelLog[level].timestamp = GetServerTime();
-	local zone = C_Map.GetBestMapForUnit("player")
+	local x, y, zone = NIT.dragonLib:GetPlayerZonePosition();
 	NIT.data.myChars[char].levelLog[level].zone = zone;
 	NIT.data.myChars[char].levelLog[level].x = x;
 	NIT.data.myChars[char].levelLog[level].y = y;
@@ -52,7 +52,7 @@ function NIT:addLevelLogDing(level, isFirstTime)
 	if (zoneText and zoneText ~= "") then
 		NIT.data.myChars[char].levelLog[level].zoneName = GetZoneText(); --Zone names are not available at logon.
 	else
-		NIT.data.myChars[char].levelLog[level].zoneName = "Logging in"
+		NIT.data.myChars[char].levelLog[level].zoneName = NIT.dragonLib:GetLocalizedMap(zone);
 	end
 	NIT.data.myChars[char].levelLog[level].subzoneName = GetSubZoneText();
 	NIT.data.myChars[char].levelLog[level].gold = GetMoney();
@@ -80,12 +80,12 @@ function NIT:recalcLevelLogZoneText()
 	if (not level or not tonumber(level)) then
 		return;
 	end
-	local zone = C_Map.GetBestMapForUnit("player");
+	local x, y, zone = NIT.dragonLib:GetPlayerZonePosition();
 	local zoneText = GetZoneText();
 	if (zoneText and zoneText ~= "") then
 		NIT.data.myChars[char].levelLog[level].zoneName = GetZoneText();
 	else
-		NIT.data.myChars[char].levelLog[level].zoneName = "Logging in";
+		NIT.data.myChars[char].levelLog[level].zoneName = NIT.dragonLib:GetLocalizedMap(zone);
 	end
 	NIT.data.myChars[char].levelLog[level].subzoneName = GetSubZoneText();
 	--NIT:debug("Recalced level log zone text:", GetZoneText(), GetSubZoneText());
@@ -434,7 +434,7 @@ function NIT:createLevelLogFrame()
 			
 			obj.tooltip = CreateFrame("Frame", "$parentLineTooltip" .. count, frame, "TooltipBorderedFrameTemplate");
 			obj.tooltip:SetPoint("CENTER", obj, "CENTER", 0, -46);
-			obj.tooltip:SetFrameStrata("TOOLTIP");
+			obj.tooltip:SetFrameStrata("HIGH");
 			obj.tooltip:SetFrameLevel(6);
 			--Change the alpha.
 			obj.tooltip.NineSlice:SetCenterColor(0, 0, 0, 1);

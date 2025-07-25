@@ -1274,13 +1274,6 @@ end
 local isGhost = false;
 NIT.lastInstanceName = "(Unknown Instance)";
 local doneFirstGUIDCheck;
-
-function iterateInstance()
-	NIT.db.global.instanceCounter = NIT.db.global.instanceCounter or 0;
-	NIT.db.global.instanceCounter = NIT.db.global.instanceCounter + 1;
-	return NIT.db.global.instanceCounter;
-end
-
 function NIT:enteredInstance(isReload, isLogon, checkAgain)
 	doGUID = true;
 	local instance, instanceType = IsInInstance();
@@ -1317,10 +1310,10 @@ function NIT:enteredInstance(isReload, isLogon, checkAgain)
 			type = "scenario";
 		end
 	end
-	if (instance and (instanceType == "party" or instanceType == "raid"
+	if (instance == true and (instanceType == "party" or instanceType == "raid"
 			or type == "bg" or type == "arena")) then
-		local instanceID = iterateInstance();
-		local instanceName, instanceType, difficultyID = GetInstanceInfo();
+		local instanceName, instanceType, difficultyID, difficultyName, maxPlayers, dynamicDifficulty,
+				isDynamic, instanceID, instanceGroupSize, LfgDungeonID = GetInstanceInfo();
 		if (NIT.inInstance and NIT.lastInstanceName ~= instanceName) then
 			--If we zone from one instance into another instance and the instance name if different (UBRS to BWL etc).
 			--Close out the old instance data before starting a new.
@@ -2930,17 +2923,16 @@ function NIT:checkRewards()
 	end
 end
 
--- TODO: Fix DAILY_QUESTS_RESET, was deleted should be added specific to epoch
--- local f = CreateFrame("Frame")
--- f:RegisterEvent("CHAT_MSG_SYSTEM")
--- f:SetScript('OnEvent', function(self, event, msg)
--- 	if (string.match(msg, DAILY_QUESTS_RESET)) then
--- 		C_Timer.After(10, function()
--- 			NIT:resetWeeklyAndDailyData();
--- 			NIT:updateWeeklyResetTime();
--- 		end)
--- 	end
--- end)
+local f = CreateFrame("Frame")
+f:RegisterEvent("CHAT_MSG_SYSTEM")
+f:SetScript('OnEvent', function(self, event, msg)
+	if (string.match(msg, DAILY_QUESTS_RESET)) then
+		C_Timer.After(10, function()
+			NIT:resetWeeklyAndDailyData();
+			NIT:updateWeeklyResetTime();
+		end)
+	end
+end)
 
 --Weekly and daily data.
 function NIT:resetWeeklyAndDailyData()
@@ -3635,46 +3627,45 @@ function NIT:recordCooldowns()
 	local error;
 	local duplicateCheck = true;
 	local numTradeSkills = GetNumTradeSkills() or 0;
-	-- TODO Implement professions for Epoch
-	-- if (numTradeSkills < 1) then
-	-- 	--Try crafts for enchanting.
-	-- 	numTradeSkills = GetNumCrafts();
-	-- end
-	-- if (duplicateCheck) then
-	-- 	for i = 1, numTradeSkills do
-	-- 		local secondsLeft = GetTradeSkillCooldown(i) or GetCraftCooldown(i);
-	-- 		if (secondsLeft and secondsLeft > 60) then
-	-- 			local skillName = GetTradeSkillInfo(i) or GetCraftInfo(i);
-	-- 			--NIT:debug("Check Skill:", skillName, "Cooldown:", secondsLeft);
-	-- 			data[skillName] = secondsLeft;
-	-- 			--Alchemy has 12 skills that share a cooldown, if there's more than 12 duplicate timestamps we have a rare bug.
-	-- 			count[secondsLeft] = (count[secondsLeft] or 0) + 1;
-	-- 			if (count[secondsLeft] > 15) then
-	-- 				error = true;
-	-- 			end
-	-- 		end
-	-- 	end
-	-- 	if (not error) then
-	-- 		for skillName, secondsLeft in pairs(data) do
-	-- 			if (not NIT.data.myChars[char].cooldowns[skillName]) then
-	-- 				NIT.data.myChars[char].cooldowns[skillName] = {};
-	-- 			end
-	-- 			NIT.data.myChars[char].cooldowns[skillName].time = GetServerTime() + secondsLeft;
-	-- 		end
-	-- 	end
-	-- else
-	-- 	for i = 1, numTradeSkills do
-	-- 		local secondsLeft = GetTradeSkillCooldown(i);
-	-- 		if (secondsLeft and secondsLeft > 60) then
-	-- 			local skillName = GetTradeSkillInfo(i);
-	-- 			--NIT:debug("Skill:", skillName, "Cooldown:", secondsLeft);
-	-- 			if (not NIT.data.myChars[char].cooldowns[skillName]) then
-	-- 				NIT.data.myChars[char].cooldowns[skillName] = {};
-	-- 			end
-	-- 			NIT.data.myChars[char].cooldowns[skillName].time = GetServerTime() + secondsLeft;
-	-- 		end
-	-- 	end
-	-- end
+	if (numTradeSkills < 1) then
+		--Try crafts for enchanting.
+		numTradeSkills = GetNumCrafts();
+	end
+	if (duplicateCheck) then
+		for i = 1, numTradeSkills do
+			local secondsLeft = GetTradeSkillCooldown(i) or GetCraftCooldown(i);
+			if (secondsLeft and secondsLeft > 60) then
+				local skillName = GetTradeSkillInfo(i) or GetCraftInfo(i);
+				--NIT:debug("Check Skill:", skillName, "Cooldown:", secondsLeft);
+				data[skillName] = secondsLeft;
+				--Alchemy has 12 skills that share a cooldown, if there's more than 12 duplicate timestamps we have a rare bug.
+				count[secondsLeft] = (count[secondsLeft] or 0) + 1;
+				if (count[secondsLeft] > 15) then
+					error = true;
+				end
+			end
+		end
+		if (not error) then
+			for skillName, secondsLeft in pairs(data) do
+				if (not NIT.data.myChars[char].cooldowns[skillName]) then
+					NIT.data.myChars[char].cooldowns[skillName] = {};
+				end
+				NIT.data.myChars[char].cooldowns[skillName].time = GetServerTime() + secondsLeft;
+			end
+		end
+	else
+		for i = 1, numTradeSkills do
+			local secondsLeft = GetTradeSkillCooldown(i);
+			if (secondsLeft and secondsLeft > 60) then
+				local skillName = GetTradeSkillInfo(i);
+				--NIT:debug("Skill:", skillName, "Cooldown:", secondsLeft);
+				if (not NIT.data.myChars[char].cooldowns[skillName]) then
+					NIT.data.myChars[char].cooldowns[skillName] = {};
+				end
+				NIT.data.myChars[char].cooldowns[skillName].time = GetServerTime() + secondsLeft;
+			end
+		end
+	end
 	for bag = 0, NUM_BAG_SLOTS do
 		for slot = 1, GetContainerNumSlots(bag) do
 			local item = Item:CreateFromBagAndSlot(bag, slot);

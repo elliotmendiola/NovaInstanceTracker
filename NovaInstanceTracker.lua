@@ -5,14 +5,39 @@
 
 NIT = LibStub("AceAddon-3.0"):NewAddon("NovaInstanceTracker", "AceComm-3.0");
 local _, _, _, tocVersion = GetBuildInfo();
-NIT.isEpoch = true;
-NIT.expansionNum = 3;
+NIT.expansionNum = 1;
+if (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC) then
+	NIT.isClassic = true;
+elseif (WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC) then
+	NIT.isTBC = true;
+	NIT.expansionNum = 2;
+elseif (WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC) then
+	NIT.isWrath = true;
+	NIT.expansionNum = 3;
+elseif (WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC) then
+	NIT.isCata = true;
+	NIT.expansionNum = 4;
+elseif (WOW_PROJECT_ID == WOW_PROJECT_MISTS_CLASSIC) then
+	NIT.isMOP = true; --Later expansion project id's will likely need updating once Blizzard decides on the names.
+	NIT.expansionNum = 5;
+elseif (WOW_PROJECT_ID == WOW_PROJECT_WARLORDS_CLASSIC) then
+	NIT.isWOD = true;
+	NIT.expansionNum = 6;
+elseif (WOW_PROJECT_ID == WOW_PROJECT_LEGION_CLASSIC) then
+	NIT.isLegion = true;
+	NIT.expansionNum = 7;
+elseif (WOW_PROJECT_ID == WOW_PROJECT_MAINLINE) then
+	NIT.isRetail = true;
+	NIT.expansionNum = 11;
+end
 --if (NIT.isClassic and C_Engraving and C_Engraving.IsEngravingEnabled()) then
 if (NIT.isClassic and C_Seasons and C_Seasons.GetActiveSeason() == 2) then
 	NIT.isSOD = true;
 end
 NIT.LSM = LibStub("LibSharedMedia-3.0");
 NIT.DDM = LibStub("LibUIDropDownMenu-4.0");
+NIT.dragonLib = LibStub("HereBeDragons-2.0");
+NIT.dragonLibPins = LibStub("HereBeDragons-Pins-2.0");
 NIT.commPrefix = "NIT";
 NIT.hasAddon = {};
 NIT.realm = GetRealmName();
@@ -55,7 +80,7 @@ else
 	NIT.hourlyLimit = 5;
 	NIT.dailyLimit = 999;
 end
-NIT.maxLevel = 60;
+NIT.maxLevel = GetMaxPlayerLevel();
 NIT.prefixColor = "|cFFFF6900";
 NIT.perCharOnly = false; --Per char is gone in TBC, not sure how I didn't notice this earlier tbh, blizz never announced it.
 NIT.loadTime = GetServerTime();
@@ -1322,12 +1347,12 @@ function NIT:getMinimapButtonNextExpires(char)
 end
 
 function NIT:addBackdrop(string)
-	if (ClassicBackdropTemplateMixin) then
+	if (BackdropTemplateMixin) then
 		if (string) then
 			--Inherit backdrop first so our frames points etc don't get overwritten.
-			return "ClassicBackdropTemplate," .. string;
+			return "BackdropTemplate," .. string;
 		else
-			return "ClassicBackdropTemplate";
+			return "BackdropTemplate";
 		end
 	else
 		return string;
@@ -1345,7 +1370,7 @@ function NIT:openLockoutsFrame()
 		lockoutsFrame:SetClampedToScreen(true);
 		lockoutsFrame:ClearAllPoints();
 		lockoutsFrame:SetPoint("TOP", UIParent, "CENTER", 0, 270);
-		lockoutsFrame.scrollFrame:GetScrollChild():Hide();
+		lockoutsFrame.scrollFrame.ScrollBar:Hide();
 	end
 	if (not lockoutsFrame:IsShown()) then
 		lockoutsFrame:Show();
@@ -1478,11 +1503,11 @@ function NIT:recalcLockoutsFrame()
 	local height = lockoutsFrame.scrollChild.fs2:GetStringHeight() + 50;
 	if (height > 800) then
 		height = 800;
-		if (not lockoutsFrame.scrollFrame:GetScrollChild():IsShown()) then
-			lockoutsFrame.scrollFrame:GetScrollChild():Show();
+		if (not lockoutsFrame.scrollFrame.ScrollBar:IsShown()) then
+			lockoutsFrame.scrollFrame.ScrollBar:Show();
 		end
 	else
-		lockoutsFrame.scrollFrame:GetScrollChild():Hide();
+		lockoutsFrame.scrollFrame.ScrollBar:Hide();
 	end
 	lockoutsFrame:SetHeight(height);
 end
@@ -1495,8 +1520,8 @@ NITInstanceFrame:SetMovable(true);
 NITInstanceFrame:EnableMouse(true);
 tinsert(UISpecialFrames, "NITInstanceFrame");
 NITInstanceFrame:SetPoint("CENTER", UIParent, 0, 100);
-ClassicBackdropTemplateMixin_SetBackdrop(NITInstanceFrame, {bgFile = "Interface\\Buttons\\WHITE8x8",insets = {top = 0, left = 0, bottom = 0, right = 0}});
-ClassicBackdropTemplateMixin_SetBackdropColor(NITInstanceFrame, 0, 0, 0, .5);
+NITInstanceFrame:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8x8",insets = {top = 0, left = 0, bottom = 0, right = 0}});
+NITInstanceFrame:SetBackdropColor(0,0,0,.5);
 NITInstanceFrame.CharCount:Hide();
 NITInstanceFrame:SetFrameStrata("HIGH");
 NITInstanceFrame.EditBox:SetAutoFocus(false);
@@ -1579,7 +1604,7 @@ NITInstanceDragFrame:SetScript("OnHide", function(self)
 end)
 
 --Top right X close button.
-local NITInstanceFrameClose = CreateFrame("Button", "NITInstanceFrameClose", NITInstanceFrame, "ClassicUIPanelCloseButton");
+local NITInstanceFrameClose = CreateFrame("Button", "NITInstanceFrameClose", NITInstanceFrame, "UIPanelCloseButton");
 --NITInstanceFrameClose:SetPoint("TOPRIGHT", -5, 8.6);
 --NITInstanceFrameClose:SetWidth(31);
 --NITInstanceFrameClose:SetHeight(31);
@@ -1962,7 +1987,7 @@ NITPostInstanceStatsFrame:SetSize(120, 70);
 --NITPostInstanceStatsFrame:EnableMouse(true);
 tinsert(UISpecialFrames, "NITPostInstanceStatsFrame");
 --NITPostInstanceStatsFrame:SetPoint("CENTER", UIParent, 0, 100);
-ClassicBackdropTemplateMixin_SetBackdrop(NITPostInstanceStatsFrame, {
+NITPostInstanceStatsFrame:SetBackdrop({
 	bgFile = "Interface\\Buttons\\WHITE8x8",
 	edgeFile = "Interface\\ChatFrame\\ChatFrameBackground",
 	tile = true,
@@ -1970,9 +1995,9 @@ ClassicBackdropTemplateMixin_SetBackdrop(NITPostInstanceStatsFrame, {
 	edgeSize = 2,
 	insets = {top = 0, left = 0, bottom = 0, right = 0}
 });
-ClassicBackdropTemplateMixin_SetBackdropColor(NITPostInstanceStatsFrame, 0, 0, 0, 1);
+NITPostInstanceStatsFrame:SetBackdropColor(0,0,0,1);
 --NITPostInstanceStatsFrame:SetBackdropBorderColor(1,1,0,.7);
-ClassicBackdropTemplateMixin_SetBackdropBorderColor(NITPostInstanceStatsFrame, 1, 105/255, 0, .7);
+NITPostInstanceStatsFrame:SetBackdropBorderColor(1,105/255,0,.7);
 
 NITPostInstanceStatsFrame:SetFrameStrata("HIGH");
 NITPostInstanceStatsFrame:SetFrameLevel(20);
@@ -1987,7 +2012,7 @@ for i = 1, 3 do
 	frame:SetScript("OnClick", function(self, arg)
 		NITPostInstanceStatsFrame:Hide();
 	end)
-	ClassicBackdropTemplateMixin_SetBackdrop(frame, {
+	frame:SetBackdrop({
 		bgFile = "Interface\\Buttons\\WHITE8x8",
 		--edgeFile = "Interface\\ChatFrame\\ChatFrameBackground",
 		--tile = true,
@@ -1995,7 +2020,7 @@ for i = 1, 3 do
 		--edgeSize = 0.5,
 		insets = {top = 0, left = 0, bottom = 0, right = 0}
 	});
-	ClassicBackdropTemplateMixin_SetBackdropColor(frame, 1, 1, 1, .15);
+	frame:SetBackdropColor(1,1,1,.15);
 	--frame:SetBackdropBorderColor(1,1,1,.8);
 	frame:SetSize(105, 12);
 	frame:SetPoint("CENTER", 0, 0);
@@ -2092,10 +2117,8 @@ function NIT:createInstanceLineFrame(type, data, count)
 		obj.fs:SetJustifyH("LEFT");
 		obj.tooltip = CreateFrame("Frame", type .. "NITInstanceLineTooltip", NITInstanceFrame, "TooltipBorderedFrameTemplate");
 		obj.tooltip:SetPoint("CENTER", obj, "CENTER", 0, -46);
-		obj.tooltip:SetFrameStrata("TOOLTIP");
+		obj.tooltip:SetFrameStrata("HIGH");
 		obj.tooltip:SetFrameLevel(4);
-		obj.tooltip:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8x8",insets = {top = 0, left = 0, bottom = 0, right = 0}})
-		obj.tooltip:SetBackdropColor(0, 0, 0, 0.8)
 		obj.tooltip.fs = obj.tooltip:CreateFontString(type .. "NITInstanceLineTooltipFS", "ARTWORK");
 		obj.tooltip.fs:SetPoint("CENTER", 0, 0);
 		obj.tooltip.fs:SetFont(NIT.regionFont, 13);
@@ -2149,10 +2172,9 @@ function NIT:createInstanceLineFrame(type, data, count)
 
 		--end)
 		obj.removeButton:SetNormalTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcon_7");
-		obj.removeButton:GetNormalTexture():SetTexCoord(0, 1, 0, 1);
 		obj.removeButton.tooltip = CreateFrame("Frame", type .. "NITInstanceLineTooltipRB", NITInstanceFrame, "TooltipBorderedFrameTemplate");
 		obj.removeButton.tooltip:SetPoint("RIGHT", obj.removeButton, "LEFT", -5, 0);
-		obj.removeButton.tooltip:SetFrameStrata("TOOLTIP");
+		obj.removeButton.tooltip:SetFrameStrata("HIGH");
 		obj.removeButton.tooltip:SetFrameLevel(3);
 		obj.removeButton.tooltip.fs = obj.removeButton.tooltip:CreateFontString(type .. "NITInstanceLineTooltipRBFS", "ARTWORK");
 		obj.removeButton.tooltip.fs:SetPoint("CENTER", -0, 0);
@@ -2993,8 +3015,8 @@ NITInstanceFrameDeleteConfirm:SetHeight(130);
 NITInstanceFrameDeleteConfirm:SetWidth(250);
 tinsert(UISpecialFrames, "NITInstanceFrameDeleteConfirm");
 NITInstanceFrameDeleteConfirm:SetPoint("CENTER", UIParent, 0, 200);
-ClassicBackdropTemplateMixin_SetBackdrop(NITInstanceFrameDeleteConfirm, {bgFile = "Interface\\Buttons\\WHITE8x8",insets = {top = 0, left = 0, bottom = 0, right = 0}});
-ClassicBackdropTemplateMixin_SetBackdropColor(NITInstanceFrameDeleteConfirm, 0, 0, 0, 1);
+NITInstanceFrameDeleteConfirm:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8x8",insets = {top = 0, left = 0, bottom = 0, right = 0}});
+NITInstanceFrameDeleteConfirm:SetBackdropColor(0,0,0,1);
 NITInstanceFrameDeleteConfirm.CharCount:Hide();
 NITInstanceFrameDeleteConfirm:SetFrameStrata("HIGH");
 NITInstanceFrameDeleteConfirm.EditBox:SetAutoFocus(false);
@@ -3026,7 +3048,7 @@ NITInstanceFrameDCDelete:SetText(L["delete"]);
 NITInstanceFrameDCDelete:SetNormalFontObject("GameFontNormal");
 
 --Top right X close button.
-local NITInstanceDCFrameClose = CreateFrame("Button", "NITInstanceDCFrameClose", NITInstanceFrameDeleteConfirm, "ClassicUIPanelCloseButton");
+local NITInstanceDCFrameClose = CreateFrame("Button", "NITInstanceDCFrameClose", NITInstanceFrameDeleteConfirm, "UIPanelCloseButton");
 --NITInstanceDCFrameClose:SetPoint("TOPRIGHT", 10, 10);
 --NITInstanceDCFrameClose:SetWidth(36);
 --NITInstanceDCFrameClose:SetHeight(36);
@@ -3108,8 +3130,8 @@ NITTradeLogFrame:SetMovable(true);
 NITTradeLogFrame:EnableMouse(true);
 tinsert(UISpecialFrames, "NITTradeLogFrame");
 NITTradeLogFrame:SetPoint("CENTER", UIParent, 20, 120);
-ClassicBackdropTemplateMixin_SetBackdrop(NITTradeLogFrame, {bgFile = "Interface\\Buttons\\WHITE8x8",insets = {top = 0, left = 0, bottom = 0, right = 0}});
-ClassicBackdropTemplateMixin_SetBackdropColor(NITTradeLogFrame, 0, 0, 0, .8);
+NITTradeLogFrame:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8x8",insets = {top = 0, left = 0, bottom = 0, right = 0}});
+NITTradeLogFrame:SetBackdropColor(0,0,0,.8);
 NITTradeLogFrame.CharCount:Hide();
 --NITTradeLogFrame:SetFrameLevel(128);
 NITTradeLogFrame:SetFrameStrata("MEDIUM");
@@ -3178,7 +3200,7 @@ NITTradeLogDragFrame:SetScript("OnHide", function(self)
 end)
 
 --Top right X close button.
-local NITTradeLogFrameClose = CreateFrame("Button", "NITTradeLogFrameClose", NITTradeLogFrame, "ClassicUIPanelCloseButton");
+local NITTradeLogFrameClose = CreateFrame("Button", "NITTradeLogFrameClose", NITTradeLogFrame, "UIPanelCloseButton");
 --NITTradeLogFrameClose:SetPoint("TOPRIGHT", -5, 8.6);
 --NITTradeLogFrameClose:SetWidth(31);
 --NITTradeLogFrameClose:SetHeight(31);
@@ -3311,13 +3333,13 @@ NITTradeCopyFrame:SetMovable(true);
 NITTradeCopyFrame:EnableMouse(true);
 tinsert(UISpecialFrames, "NITTradeCopyFrame");
 NITTradeCopyFrame:SetPoint("CENTER", UIParent, -70, 150);
-ClassicBackdropTemplateMixin_SetBackdrop(NITTradeCopyFrame, {bgFile = "Interface\\Buttons\\WHITE8x8",insets = {top = 0, left = 0, bottom = 0, right = 0}});
-ClassicBackdropTemplateMixin_SetBackdropColor(NITTradeCopyFrame, 0, 0, 0, 0.9);
+NITTradeCopyFrame:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8x8",insets = {top = 0, left = 0, bottom = 0, right = 0}});
+NITTradeCopyFrame:SetBackdropColor(0,0,0,0.9);
 NITTradeCopyFrame.CharCount:Hide();
 NITTradeCopyFrame:SetFrameStrata("HIGH");
 NITTradeCopyFrame.EditBox:SetAutoFocus(false);
 --Top right X close button.
-local NITTradeCopyFrameClose = CreateFrame("Button", "NITTradeCopyFrameClose", NITTradeCopyFrame, "ClassicUIPanelCloseButton");
+local NITTradeCopyFrameClose = CreateFrame("Button", "NITTradeCopyFrameClose", NITTradeCopyFrame, "UIPanelCloseButton");
 NITTradeCopyFrameClose:SetPoint("TOPRIGHT", -12, 3.75);
 NITTradeCopyFrameClose:SetWidth(20);
 NITTradeCopyFrameClose:SetHeight(20);
@@ -3336,14 +3358,14 @@ NITTradeCopyDragFrame:SetToplevel(true);
 NITTradeCopyDragFrame:EnableMouse(true);
 --NITTradeCopyDragFrame:SetPoint("TOP", 0, 25);
 NITTradeCopyDragFrame:SetPoint("TOP", 0, 91);
-ClassicBackdropTemplateMixin_SetBackdrop(NITTradeCopyDragFrame, {
+NITTradeCopyDragFrame:SetBackdrop({
 	bgFile = "Interface\\Buttons\\WHITE8x8",
 	edgeFile = [[Interface\Tooltips\UI-Tooltip-Border]],
 	edgeSize = 14,
 	insets = {left = 4, right = 4, top = 4, bottom = 4},
 });
-ClassicBackdropTemplateMixin_SetBackdropColor(NITTradeCopyDragFrame, 0, 0, 0, 0.9);
-ClassicBackdropTemplateMixin_SetBackdropBorderColor(NITTradeCopyDragFrame, 0.235, 0.235, 0.235);
+NITTradeCopyDragFrame:SetBackdropColor(0,0,0,0.9);
+NITTradeCopyDragFrame:SetBackdropBorderColor(0.235, 0.235, 0.235);
 NITTradeCopyDragFrame.fs = NITTradeCopyDragFrame:CreateFontString("NITTradeCopyDragFrameFS", "ARTWORK");
 --NITTradeCopyDragFrame.fs:SetPoint("CENTER", 0, 0);
 NITTradeCopyDragFrame.fs:SetPoint("TOP", 0, -5);
@@ -3497,9 +3519,9 @@ function NIT:createTradeCopyFormatButtons()
 		NIT.copyTradeRecordsSlider:SetWidth(224);
 		NIT.copyTradeRecordsSlider:SetHeight(16);
 		NIT.copyTradeRecordsSlider:SetMinMaxValues(1, 100);
-	    -- NIT.copyTradeRecordsSlider:SetObeyStepOnDrag(true);
+	    NIT.copyTradeRecordsSlider:SetObeyStepOnDrag(true);
 	    NIT.copyTradeRecordsSlider:SetValueStep(1);
-	    -- NIT.copyTradeRecordsSlider:SetStepsPerPage(1);
+	    NIT.copyTradeRecordsSlider:SetStepsPerPage(1);
 		NIT.copyTradeRecordsSlider:SetValue(NIT.db.global.copyTradeRecords);
 	    NITCopyTradeRecordsSlider.Low:SetText("1");
 	    NITCopyTradeRecordsSlider.High:SetText("100");
@@ -3546,9 +3568,9 @@ function NIT:createTradeCopyFormatButtons()
 		NIT.copyTradeRecordsSlider.editBox:SetWidth(70);
 		NIT.copyTradeRecordsSlider.editBox:SetJustifyH("CENTER");
 		NIT.copyTradeRecordsSlider.editBox:EnableMouse(true);
-		ClassicBackdropTemplateMixin_SetBackdrop(NIT.copyTradeRecordsSlider.editBox, ManualBackdrop);
-		ClassicBackdropTemplateMixin_SetBackdropColor(NIT.copyTradeRecordsSlider.editBox, 0, 0, 0, 0.5);
-		ClassicBackdropTemplateMixin_SetBackdropBorderColor(NIT.copyTradeRecordsSlider.editBox, 0.3, 0.3, 0.30, 0.80);
+		NIT.copyTradeRecordsSlider.editBox:SetBackdrop(ManualBackdrop);
+		NIT.copyTradeRecordsSlider.editBox:SetBackdropColor(0, 0, 0, 0.5);
+		NIT.copyTradeRecordsSlider.editBox:SetBackdropBorderColor(0.3, 0.3, 0.30, 0.80);
 		NIT.copyTradeRecordsSlider.editBox:SetScript("OnEnter", EditBox_OnEnter);
 		NIT.copyTradeRecordsSlider.editBox:SetScript("OnLeave", EditBox_OnLeave);
 		NIT.copyTradeRecordsSlider.editBox:SetScript("OnEnterPressed", EditBox_OnEnterPressed);
@@ -3700,8 +3722,8 @@ NITAltsFrame:SetMovable(true);
 NITAltsFrame:EnableMouse(true);
 tinsert(UISpecialFrames, "NITAltsFrame");
 NITAltsFrame:SetPoint("CENTER", UIParent, 0, 100);
-ClassicBackdropTemplateMixin_SetBackdrop(NITAltsFrame, {bgFile = "Interface\\Buttons\\WHITE8x8",insets = {top = 0, left = 0, bottom = 0, right = 0}});
-ClassicBackdropTemplateMixin_SetBackdropColor(NITAltsFrame, 0, 0, 0, .8);
+NITAltsFrame:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8x8",insets = {top = 0, left = 0, bottom = 0, right = 0}});
+NITAltsFrame:SetBackdropColor(0,0,0,.8);
 NITAltsFrame.CharCount:Hide();
 NITAltsFrame:SetFrameStrata("HIGH");
 NITAltsFrame.EditBox:SetAutoFocus(false);
@@ -3772,7 +3794,7 @@ NITAltsDragFrame:SetScript("OnHide", function(self)
 end)
 
 --Top right X close button.
-local NITAltsFrameClose = CreateFrame("Button", "NITAltsFrameClose", NITAltsFrame, "ClassicUIPanelCloseButton");
+local NITAltsFrameClose = CreateFrame("Button", "NITAltsFrameClose", NITAltsFrame, "UIPanelCloseButton");
 --NITAltsFrameClose:SetPoint("TOPRIGHT", -5, 8.6);
 --NITAltsFrameClose:SetWidth(31);
 --NITAltsFrameClose:SetHeight(31);
@@ -3830,9 +3852,9 @@ function NIT:createAltsFrameSlider()
 		NIT.charsMinLevelSlider:SetWidth(120);
 		NIT.charsMinLevelSlider:SetHeight(12);
 		NIT.charsMinLevelSlider:SetMinMaxValues(1, NIT.maxLevel);
-	    -- NIT.charsMinLevelSlider:SetObeyStepOnDrag(true);
+	    NIT.charsMinLevelSlider:SetObeyStepOnDrag(true);
 	    NIT.charsMinLevelSlider:SetValueStep(1);
-	    -- NIT.charsMinLevelSlider:SetStepsPerPage(1);
+	    NIT.charsMinLevelSlider:SetStepsPerPage(1);
 		NIT.charsMinLevelSlider:SetValue(NIT.db.global.charsMinLevel);
 		NITCharsMinLevelSlider.Low:SetText("1");
 		NITCharsMinLevelSlider.High:SetText(NIT.maxLevel);
@@ -3879,9 +3901,9 @@ function NIT:createAltsFrameSlider()
 		NIT.charsMinLevelSlider.editBox:SetWidth(70);
 		NIT.charsMinLevelSlider.editBox:SetJustifyH("CENTER");
 		NIT.charsMinLevelSlider.editBox:EnableMouse(true);
-		ClassicBackdropTemplateMixin_SetBackdrop(NIT.charsMinLevelSlider.editBox, ManualBackdrop);
-		ClassicBackdropTemplateMixin_SetBackdropColor(NIT.charsMinLevelSlider.editBox, 0, 0, 0, 0.5);
-		ClassicBackdropTemplateMixin_SetBackdropBorderColor(NIT.charsMinLevelSlider.editBox, 0.3, 0.3, 0.30, 0.80);
+		NIT.charsMinLevelSlider.editBox:SetBackdrop(ManualBackdrop);
+		NIT.charsMinLevelSlider.editBox:SetBackdropColor(0, 0, 0, 0.5);
+		NIT.charsMinLevelSlider.editBox:SetBackdropBorderColor(0.3, 0.3, 0.30, 0.80);
 		NIT.charsMinLevelSlider.editBox:SetScript("OnEnter", EditBox_OnEnter);
 		NIT.charsMinLevelSlider.editBox:SetScript("OnLeave", EditBox_OnLeave);
 		NIT.charsMinLevelSlider.editBox:SetScript("OnEnterPressed", EditBox_OnEnterPressed);
@@ -4053,7 +4075,7 @@ function NIT:createAltsLineFrame(type, data, count)
 		obj.fs:SetJustifyH("LEFT");
 		obj.tooltip = CreateFrame("Frame", type .. "NITAltsLineTooltip", NITAltsFrame, "TooltipBorderedFrameTemplate");
 		obj.tooltip:SetPoint("CENTER", obj, "CENTER", 0, -46);
-		obj.tooltip:SetFrameStrata("TOOLTIP");
+		obj.tooltip:SetFrameStrata("HIGH");
 		obj.tooltip:SetFrameLevel(4);
 		obj.tooltip.fs = obj.tooltip:CreateFontString(type .. "NITAltsLineTooltipFS", "ARTWORK");
 		obj.tooltip.fs:SetPoint("CENTER", 0, 0);
@@ -4098,10 +4120,9 @@ function NIT:createAltsLineFrame(type, data, count)
 
 		--end)
 		obj.removeButton:SetNormalTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcon_7");
-		obj.removeButton:GetNormalTexture():SetTexCoord(0, 1, 0, 1);
 		obj.removeButton.tooltip = CreateFrame("Frame", type .. "NITAltsLineTooltipRB", NITAltsFrame, "TooltipBorderedFrameTemplate");
 		obj.removeButton.tooltip:SetPoint("RIGHT", obj.removeButton, "LEFT", -5, 0);
-		obj.removeButton.tooltip:SetFrameStrata("TOOLTIP");
+		obj.removeButton.tooltip:SetFrameStrata("HIGH");
 		obj.removeButton.tooltip:SetFrameLevel(3);
 		obj.removeButton.tooltip.fs = obj.removeButton.tooltip:CreateFontString(type .. "NITAltsLineTooltipRBFS", "ARTWORK");
 		obj.removeButton.tooltip.fs:SetPoint("CENTER", -0, 0);
@@ -4125,7 +4146,7 @@ function NIT:createAltsLineFrame(type, data, count)
 		obj.levelLogButton:SetText(L["Level Log"]);
 		obj.levelLogButton.tooltip = CreateFrame("Frame", type .. "NITAltsLineTooltipRB", NITAltsFrame, "TooltipBorderedFrameTemplate");
 		obj.levelLogButton.tooltip:SetPoint("TOP", obj.levelLogButton, "TOP", 0, 27);
-		obj.levelLogButton.tooltip:SetFrameStrata("TOOLTIP");
+		obj.levelLogButton.tooltip:SetFrameStrata("HIGH");
 		obj.levelLogButton.tooltip:SetFrameLevel(3);
 		obj.levelLogButton.tooltip.fs = obj.levelLogButton.tooltip:CreateFontString(type .. "NITAltsLineTooltipRBFS", "ARTWORK");
 		obj.levelLogButton.tooltip.fs:SetPoint("CENTER", -0, 0);
@@ -4942,8 +4963,8 @@ NITCharsFrameDeleteConfirm:SetHeight(130);
 NITCharsFrameDeleteConfirm:SetWidth(250);
 tinsert(UISpecialFrames, "NITCharsFrameDeleteConfirm");
 NITCharsFrameDeleteConfirm:SetPoint("CENTER", UIParent, 0, 200);
-ClassicBackdropTemplateMixin_SetBackdrop(NITCharsFrameDeleteConfirm, {bgFile = "Interface\\Buttons\\WHITE8x8",insets = {top = 0, left = 0, bottom = 0, right = 0}});
-ClassicBackdropTemplateMixin_SetBackdropColor(NITCharsFrameDeleteConfirm, 0, 0, 0, 1);
+NITCharsFrameDeleteConfirm:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8x8",insets = {top = 0, left = 0, bottom = 0, right = 0}});
+NITCharsFrameDeleteConfirm:SetBackdropColor(0,0,0,1);
 NITCharsFrameDeleteConfirm.CharCount:Hide();
 NITCharsFrameDeleteConfirm:SetFrameStrata("HIGH");
 NITCharsFrameDeleteConfirm.EditBox:SetAutoFocus(false);
@@ -4975,7 +4996,7 @@ NITCharsFrameDCDelete:SetText(L["delete"]);
 NITCharsFrameDCDelete:SetNormalFontObject("GameFontNormal");
 
 --Top right X close button.
-local NITCharsDCFrameClose = CreateFrame("Button", "NITCharsDCFrameClose", NITCharsFrameDeleteConfirm, "ClassicUIPanelCloseButton");
+local NITCharsDCFrameClose = CreateFrame("Button", "NITCharsDCFrameClose", NITCharsFrameDeleteConfirm, "UIPanelCloseButton");
 NITCharsDCFrameClose:SetPoint("TOPRIGHT", 10, 10);
 NITCharsDCFrameClose:SetWidth(36);
 NITCharsDCFrameClose:SetHeight(36);
@@ -5349,7 +5370,7 @@ function NIT:createSimpleTextFrame(name, width, height, x, y, borderSpacing)
 	frame.fs2:SetFont(NIT.regionFont, 14);
 	frame.fs2:SetJustifyH("LEFT");
 	--Top right X close button.
-	frame.closeButton = CreateFrame("Button", name .. "Close", frame, "ClassicUIPanelCloseButton");
+	frame.closeButton = CreateFrame("Button", name .. "Close", frame, "UIPanelCloseButton");
 	frame.closeButton:SetPoint("TOPRIGHT", 3.45, 3.2);
 	frame.closeButton:SetWidth(26);
 	frame.closeButton:SetHeight(26);
@@ -5416,7 +5437,7 @@ function NIT:createSimpleScrollFrame(name, width, height, x, y, borderSpacing, n
 		frame.scrollChild:SetWidth(self:GetWidth())
 	end)
 	frame.scrollFrame:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -8);
-	frame.scrollFrame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -28, 8);
+	frame.scrollFrame:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 8);
 	
 	frame:SetBackdrop({
 		bgFile = "Interface\\Buttons\\WHITE8x8",
@@ -5427,10 +5448,10 @@ function NIT:createSimpleScrollFrame(name, width, height, x, y, borderSpacing, n
 	});
 	frame:SetBackdropColor(0, 0, 0, 0.9);
 	frame:SetBackdropBorderColor(1, 1, 1, 0.7);
-	frame.scrollFrame:GetScrollChild():ClearAllPoints();
-	-- frame.scrollFrame:GetScrollChild():SetPoint("TOPRIGHT", -5, -(15) + 1);
-	frame.scrollChild:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -5, -31);
-	frame.scrollChild:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -5, -16);
+	frame.scrollFrame.ScrollBar:ClearAllPoints();
+	--frame.scrollFrame.ScrollBar:SetPoint("TOPRIGHT", -5, -(frame.scrollFrame.ScrollBar.ScrollDownButton:GetHeight()) + 1);
+	frame.scrollFrame.ScrollBar:SetPoint("TOPRIGHT", -5, -(frame.scrollFrame.ScrollBar.ScrollDownButton:GetHeight()) - 15);
+	frame.scrollFrame.ScrollBar:SetPoint("BOTTOMRIGHT", -5, frame.scrollFrame.ScrollBar.ScrollUpButton:GetHeight());
 	frame:SetToplevel(true);
 	frame:SetMovable(true);
 	frame:EnableMouse(true);
@@ -5498,8 +5519,8 @@ function NIT:createSimpleScrollFrame(name, width, height, x, y, borderSpacing, n
 	end)
 	
 	frame.scrollChild:EnableMouse(true);
-	-- frame.scrollChild:SetHyperlinksEnabled(true);
-	-- frame.scrollChild:SetScript("OnHyperlinkClick", ChatFrame_OnHyperlinkShow);
+	frame.scrollChild:SetHyperlinksEnabled(true);
+	frame.scrollChild:SetScript("OnHyperlinkClick", ChatFrame_OnHyperlinkShow);
 	--Set all fonts in the module using the frame.
 	--Header string.
 	frame.scrollChild.fs = frame.scrollChild:CreateFontString(name .. "FS", "ARTWORK");
@@ -5515,12 +5536,11 @@ function NIT:createSimpleScrollFrame(name, width, height, x, y, borderSpacing, n
 	frame.scrollChild.fs3:SetPoint("BOTTOM", 0, -20);
 	--frame.scrollChild.fs3:SetFont(NRC.regionFont, 14);
 	--Top right X close button.
-	frame.close = CreateFrame("Button", name .. "Close", frame, "ClassicUIPanelCloseButton");
+	frame.close = CreateFrame("Button", name .. "Close", frame, "UIPanelCloseButton");
 	--frame.close:SetPoint("TOPRIGHT", -22, -4);
-	frame.close:SetPoint("TOPRIGHT", -23.2, -3.2);
+	frame.close:SetPoint("TOPRIGHT", -3.45, -3.2);
 	frame.close:SetWidth(20);
 	frame.close:SetHeight(20);
-	frame.close:SetFrameStrata("DIALOG");
 	frame.close:SetScript("OnClick", function(self, arg)
 		frame:Hide();
 	end)
@@ -5539,8 +5559,8 @@ NITCopyFrame:SetMovable(true);
 NITCopyFrame:EnableMouse(true);
 tinsert(UISpecialFrames, "NITCopyFrame");
 NITCopyFrame:SetPoint("CENTER", UIParent, -100, 100);
-ClassicBackdropTemplateMixin_SetBackdrop(NITCopyFrame, {bgFile = "Interface\\Buttons\\WHITE8x8",insets = {top = -2, left = -3, bottom = -3, right = -3}});
-ClassicBackdropTemplateMixin_SetBackdropColor(NITCopyFrame, 0, 0, 0, .9);
+NITCopyFrame:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8x8",insets = {top = -2, left = -3, bottom = -3, right = -3}});
+NITCopyFrame:SetBackdropColor(0,0,0,.9);
 NITCopyFrame.CharCount:Hide();
 NITCopyFrame:SetFrameLevel(129);
 NITCopyFrame:SetFrameStrata("TOOLTIP");
@@ -5548,7 +5568,7 @@ local NITCopyFrameTopBar = CreateFrame("Frame", "NITCopyFrameTopBar", NITCopyFra
 NITCopyFrameTopBar:SetPoint("TOP", -8, 22);
 NITCopyFrameTopBar:SetWidth(100);
 NITCopyFrameTopBar:SetHeight(18);
-NITCopyFrameTopBar.fs = NITCopyFrameTopBar:CreateFontString("topBarFS", "OVERLAY", "GameFontNormalSmall");
+NITCopyFrameTopBar.fs = NITCopyFrameTopBar:CreateFontString("topBarFS", "OVERLAY", "NumberFont_Shadow_Tiny");
 NITCopyFrameTopBar.fs:SetText("NIT " .. L["Copy Paste"]);
 NITCopyFrameTopBar.fs:SetPoint("CENTER", 0, 0);
 NITCopyFrameTopBar:SetMovable(true);
@@ -5573,7 +5593,7 @@ NITCopyFrameTopBar:SetScript("OnHide", function(self)
 end)
 
 --Top right X close button
-local NITCopyFrameCloseButton = CreateFrame("Button", "NITCopyFrameCloseButton", NITCopyFrame, "ClassicUIPanelCloseButton");
+local NITCopyFrameCloseButton = CreateFrame("Button", "NITCopyFrameCloseButton", NITCopyFrame, "UIPanelCloseButton");
 NITCopyFrameCloseButton:SetPoint("TOPRIGHT", 12, 27);
 NITCopyFrameCloseButton:SetWidth(29);
 NITCopyFrameCloseButton:SetHeight(29);

@@ -7,6 +7,7 @@ local lootReminderFrame, lootReminderListFrame, remnantsFrame;
 local lastLootNpcID, lastBossNpcID, lastBossTime, lastEncounterID;
 local tinsert = tinsert;
 local GetItemInfo = GetItemInfo or C_Item.GetItemInfo;
+local GetPlayerAuraBySpellID = C_UnitAuras.GetPlayerAuraBySpellID;
 
 local msgTimer, fadeTimer;
 local function hideMiddleMsg()
@@ -147,13 +148,7 @@ function NIT:ApplyBounce(object, bounceHeight, duration, smoothing, doNotStart)
         Duration = 0.5,
         Smoothing = "OUT",
     };
-    local point, relativeTo, relativePoint, offsetX, offsetY-- = string.match(center, "^([A-Za-z]+) table: [^%s]+ ([A-Za-z]+) (-?%d+%.?%d+) (-?%d+%.?%d+)");
-	for index = 1, object:GetNumPoints() do
-		point, relativeTo, relativePoint, offsetX, offsetY = object:GetPoint(index)
-		if (point == "CENTER") then
-			break;
-		end
-	end
+    local point, relativeTo, relativePoint, offsetX, offsetY = object:GetPointByName("CENTER");
     local animGroup = object.AnimGroup or object:CreateAnimationGroup();
     animGroup:SetLooping("BOUNCE");
     animGroup.Anim = animGroup.Anim or animGroup:CreateAnimation("Animation");
@@ -230,6 +225,24 @@ function NIT:argentDawnTrinketReminder()
 			for k, v in ipairs(trinkets) do
 				if (C_Item.IsEquippedItem(v.itemID)) then
 					isEquipped = true;
+				end
+			end
+			local hasBuff = GetPlayerAuraBySpellID(17670); --Now we have to check for buff becaus of sod naxx buff.
+			if (not isEquipped and not hasBuff) then
+				for k, v in ipairs(trinkets) do
+					local trinket = C_Item.GetItemCount(v.itemID);
+					if (trinket and trinket > 0) then
+						local _, itemLink = C_Item.GetItemInfo(v.itemID);
+						local itemString;
+						if (itemLink) then
+							itemString = itemLink;
+						else
+							itemString = v.name;
+						end
+						NIT:print("|cFF00FF00" .. L["Reminder"] .. ":|r " .. string.format(L["missingArgentDawnTrinket"], factionName, itemString));
+						addMsg("|cFF00FF00" .. L["Reminder"] .. ":|r " .. string.format(L["missingArgentDawnTrinket"], factionName, itemString), 4);
+						return;
+					end
 				end
 			end
 		end
