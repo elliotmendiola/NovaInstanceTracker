@@ -1,0 +1,74 @@
+<Ui xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
+	<Slider name="UISliderTemplate" orientation="HORIZONTAL" enableMouse="true" virtual="true">
+		<HitRectInsets>
+			<AbsInset left="0" right="0" top="-10" bottom="-10"/>
+		</HitRectInsets>
+		<Frames>
+			<Frame parentKey="NineSlice" inherits="NineSlicePanelTemplate" useParentLevel="true">
+				<KeyValues>
+					<KeyValue key="layoutType" value="UniqueCornersLayout" type="string"/>
+					<KeyValue key="layoutTextureKit" value="SliderBar" type="string"/>
+				</KeyValues>
+			</Frame>
+		</Frames>
+		<ThumbTexture parentKey="Thumb" name="$parentThumb" file="Interface\Buttons\UI-SliderBar-Button-Horizontal">
+			<Size x="32" y="32"/>
+		</ThumbTexture>
+	</Slider>
+
+	<Frame name="TooltipBackdropTemplate" mixin="TooltipBackdropTemplateMixin" virtual="true">
+		<KeyValues>
+			<KeyValue key="layoutType" value="TooltipDefaultLayout" type="string"/>
+		</KeyValues>
+		<Frames>
+			<Frame parentKey="NineSlice" inherits="NineSlicePanelTemplate" useParentLevel="true"/>
+		</Frames>
+		<Scripts>
+			<OnLoad method="TooltipBackdropOnLoad"/>
+		</Scripts>
+	</Frame>
+	
+    <Frame name="TooltipBorderedFrameTemplate" inherits="TooltipBackdropTemplate" virtual="true">
+		<KeyValues>
+			<KeyValue key="backdropColorAlpha" value="0.8" type="number"/>
+		</KeyValues>
+	</Frame>
+
+    <Frame name="ClassicUIPanelCloseButton" inherits="UIPanelCloseButton" virtual="true">
+		<DisabledTexture file="Interface\Buttons\UI-Panel-MinimizeButton-Disabled"/>
+    </Frame>
+    
+    <Frame name="ThinGoldEdgeTemplate" virtual="true">
+		<Size>
+			<AbsDimension x="100" y="20"/>
+		</Size>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentLeft" file="Interface\Common\Moneyframe">
+					<Size x="7" y="20"/>
+					<Anchors>
+						<Anchor point="TOPLEFT"/>
+						<Anchor point="BOTTOMLEFT"/>
+					</Anchors>
+					<TexCoords left="0.953125" right="0.9921875" top="0" bottom="0.296875"/>
+				</Texture>
+				<Texture name="$parentRight" file="Interface\Common\Moneyframe">
+					<Size x="7" y="20"/>
+					<Anchors>
+						<Anchor point="TOPRIGHT"/>
+						<Anchor point="BOTTOMRIGHT"/>
+					</Anchors>
+					<TexCoords left="0" right="0.0546875" top="0" bottom="0.296875"/>
+				</Texture>
+				<Texture name="$parentMiddle" file="Interface\Common\Moneyframe">
+					<Size x="80" y="20"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="$parentLeft" relativePoint="TOPRIGHT"/>
+						<Anchor point="BOTTOMRIGHT" relativeTo="$parentRight" relativePoint="BOTTOMLEFT"/>
+					</Anchors>
+					<TexCoords left="0" right="0.9921875" top="0.3125" bottom="0.609375"/>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Frame>
+</Ui>
