@@ -1091,7 +1091,15 @@ function NIT:recordBgStats()
 	NIT:recordGroupInfo();
 end
 if (NIT.expansionNum < 4) then
-	hooksecurefunc("WorldStateScoreFrame_OnShow", function(...) NIT:recordBgStats() end);
+	local worldStateScoreFrameTracker, scoreFrameShown = CreateFrame("Frame"), false;
+	worldStateScoreFrameTracker:SetScript("OnUpdate", function ()
+		if (not scoreFrameShown and WorldStateScoreFrame:IsShown()) then
+			scoreFrameShown = true;
+			NIT:recordBgStats();
+		elseif (shown and not worldStateScoreFrame:IsShown()) then
+			scoreFrameShown = false;
+		end
+	end)
 end
 
 --Seems to be some issue with it not recording as an arena if we check before the zone data is upedated properly in blizz's end?

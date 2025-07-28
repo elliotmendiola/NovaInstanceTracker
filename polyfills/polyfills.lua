@@ -62,6 +62,10 @@ C_DateAndTime.GetServerTimeLocal = C_DateAndTime.GetServerTimeLocal or function 
     return time(date("*t", time())) -- Local timestamp adjusted for tz
 end
 
+GetMaxBattlefieldID = GetMaxBattlefieldID or function ()
+    return MAX_BATTLEFIELD_QUEUES;
+end
+
 TooltipBackdropTemplateMixin = TooltipBackdropTemplateMixin or (function ()
     local TooltipBackdropTemplateMixin = {};
     

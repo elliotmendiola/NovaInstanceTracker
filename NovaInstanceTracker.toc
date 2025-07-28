@@ -7,7 +7,7 @@
 ## Title: Nova Instance Tracker
 ## RequiredDeps: !!!ClassicAPI
 ## Author: Novaspark-Arugal OCE
-## Version: 1.100
+## Version: 1.101
 ## SavedVariables: NITdatabase
 
 polyfills\polyfills.xml

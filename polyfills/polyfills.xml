@@ -2,8 +2,5 @@
 	<Script file="polyfills.lua"/>
 	<Include file="fonts.xml"/>
 	<Include file="templates.xml"/>
-	<Include file="WorldStateFrame.xml"/>
-	<Script file="WorldStateFrame.lua"/>
-	<Script file="Backdrop.lua"/>
 	<Include file="Backdrop.xml"/>
 </Ui>
